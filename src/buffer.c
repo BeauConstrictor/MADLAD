@@ -122,10 +122,11 @@ void buf_insert_l(buf_buffer *buf) {
 void buf_cursor_u(buf_buffer *buf, unsigned int n) {
   buf_flush_changes(buf);
   while (n) {
-    if (buf->cur_l->prev)
+    if (buf->cur_l->prev) {
+      if (buf->scrolled_l == buf->cur_l)
+        buf->scrolled_l = buf->cur_l->prev;
       buf->cur_l = buf->cur_l->prev;
-    else
-      break;
+    } else break;
     n--;
   }
 }
@@ -133,10 +134,9 @@ void buf_cursor_u(buf_buffer *buf, unsigned int n) {
 void buf_cursor_d(buf_buffer *buf, unsigned int n) {
   buf_flush_changes(buf);
   while (n) {
-    if (buf->cur_l->next)
+    if (buf->cur_l->next) {
       buf->cur_l = buf->cur_l->next;
-    else
-      break;
+    } else break;
     n--;
   }
 }
@@ -212,6 +212,7 @@ void buf_cursor_s(buf_buffer *buf) {
 
 void buf_scroll_u(buf_buffer *buf, unsigned int n) {
   while (n && buf->scrolled_l->prev) {
+    if (buf->cur_l->prev) buf->cur_l = buf->cur_l->prev;
     buf->scrolled_l = buf->scrolled_l->prev;
     n--;
   }
@@ -219,6 +220,7 @@ void buf_scroll_u(buf_buffer *buf, unsigned int n) {
 
 void buf_scroll_d(buf_buffer *buf, unsigned int n) {
   while (n && buf->scrolled_l->next) {
+    if (buf->cur_l->next) buf->cur_l = buf->cur_l->next;
     buf->scrolled_l = buf->scrolled_l->next;
     n--;
   }
@@ -228,7 +230,7 @@ void buf_replace_l(buf_buffer *buf, const char *s) {
   buf_flush_changes(buf);
   buf_line *l = buf->cur_l;
   size_t n = snprintf(l->text, sizeof(l->text), "%s", s);
-  if (n > sizeof(l->text)) n = sizeof(l->text);
+  if (n > sizeof(l->text)) n = sizeof(l->text) - 1;
   l->len = n;
 }
 
@@ -298,12 +300,14 @@ void buf_printall(buf_buffer *buf, unsigned int height,
   unsigned int lineno = 0;
   unsigned int printed_lines = 0;
   bool above_scroll = true;
-  char highlighted[4096];
+  char highlighted[4096]; // longer than LINE_WIDTH because of the
+                          // ansi escapes. maybe this is overkill
+                          // though :D
 
   if (cur_row) *cur_row = -1;
   if (cur_col) *cur_col = -1;
 
-  while (l) {
+  while (l && printed_lines < height) {
     if (above_scroll) {
       if (l == buf->scrolled_l) {
         above_scroll = false;
@@ -334,8 +338,11 @@ void buf_printall(buf_buffer *buf, unsigned int height,
       }
     }
 
-    highlighter(highlighted, sizeof(highlighted), s);
-    printf("%s\n", highlighted);
+    if (highlighter) {
+      highlighter(highlighted, sizeof(highlighted), s);
+      printf("%s\n", highlighted);
+    } else
+      printf("%s\n", s);
 
     l = l->next;
     lineno++;
@@ -343,10 +350,20 @@ void buf_printall(buf_buffer *buf, unsigned int height,
   }
 
   while (printed_lines < height) {
+    printf("\033[2K");
     printf(eoflines, lineno);
     putchar('\n');
     lineno++;
     printed_lines++;
+  }
+
+  // this can only happen if they moved the cursor down until it
+  // went offscreen. a bit of a hacky solution, but we can fix
+  // this from inside the printing function.
+  if (*cur_row == -1) {
+    buf_cursor_u(buf, 1);
+    buf_printall(buf, height, linenums, eoflines, cur_row, cur_col,
+        highlighter);
   }
 }
 

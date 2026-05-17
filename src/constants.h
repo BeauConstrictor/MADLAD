@@ -13,6 +13,9 @@
 #define XSTR(x) STR(x)
 #define ANSI(col) "\033[" XSTR(col) "m"
 
+#define SHIFT_(key) ((key) - 32)
+#define CTRL_(key) (SHIFT_(key) & 0x1f)
+
 #define RESET ANSI(0)
 
 #endif // CONSTANTS_H

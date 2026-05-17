@@ -29,6 +29,7 @@ typedef struct {
 } editor;
 
 struct termios oldt, newt;
+struct winsize w;
 
 void cleanup_terminal() {
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
@@ -64,7 +65,6 @@ void use_highlighter(editor *ed, const char *filetype) {
 }
 
 void draw_editor(editor *ed) {
-  struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
   // move cursor to start and hide it
@@ -86,10 +86,12 @@ void draw_editor(editor *ed) {
   printf("\033[1m\033[%um\033[7m\033[%d;1H%-*s\033[0m", ed->stat_col,
       w.ws_row, w.ws_col, ed->status);
 
-  // 1. move to cursor position in buffer
-  // 2. show the cursor
-  // 7 is the width of the line numbers
-  printf("\033[%d;%dH\033[?25h", cur_row, cur_col+7);
+  if (cur_row >= 0) {
+    // 1. show the cursor
+    // 2. move to cursor position in buffer
+    // 7 is the width of the line numbers
+    printf("\033[?25h\033[%d;%dH", cur_row, cur_col+7);
+  }
 }
 
 void chmode(editor *ed, ed_mode mode) {
@@ -108,6 +110,8 @@ void chmode(editor *ed, ed_mode mode) {
       printf("\033[6 q");
       break;
     case REPLACE:
+      ed->stat_col = YELLOW;
+      snprintf(ed->status, sizeof(ed->status), "-- REPLACE --");
       printf("\033[4 q");
       break;
   }
@@ -126,6 +130,7 @@ void handle_key(editor *ed, char c) {
         case 'r':
           chmode(ed, REPLACE);
           break;
+
         case 'h':
           buf_cursor_l(&ed->buf, 1);
           break;
@@ -138,25 +143,42 @@ void handle_key(editor *ed, char c) {
         case 'l':
           buf_cursor_r(&ed->buf, 1);
           break;
+
         case 'u':
           if (!buf_undo(&ed->buf))
             snprintf(ed->status, sizeof(ed->status), "Nothing to undo.");
           break;
+
         case 'x':
           buf_cursor_r(&ed->buf, 1);
           buf_delete_c(&ed->buf, 1);
           break;
-        case 'K':
+
+        case SHIFT_('k'):
           buf_scroll_u(&ed->buf, 1);
           break;
-        case 'J':
+        case SHIFT_('j'):
           buf_scroll_d(&ed->buf, 1);
           break;
+        case CTRL_('u'): // <c-u>
+          buf_scroll_u(&ed->buf, w.ws_row/2);
+          break;
+        case CTRL_('d'): // <c-d>
+          buf_scroll_d(&ed->buf, w.ws_row/2);
+          break;
+        case CTRL_('b'): // <c-b>
+          buf_scroll_u(&ed->buf, w.ws_row);
+          break;
+        case CTRL_('f'): // <c-f>
+          buf_scroll_d(&ed->buf, w.ws_row);
+          break;
+
         case 'q':
           exit(0);
           break;
       }
     } break;
+
     case INSERT: {
       switch (c) {
         case '\033':
@@ -170,11 +192,14 @@ void handle_key(editor *ed, char c) {
           buf_insert_c(&ed->buf, c);
       }
     } break;
+
     case REPLACE: {
-      buf_cursor_r(&ed->buf, 1);
-      buf_delete_c(&ed->buf, 1);
-      buf_insert_c(&ed->buf, c);
-      buf_cursor_l(&ed->buf, 1);
+      if (c != '\033') {
+        buf_cursor_r(&ed->buf, 1);
+        buf_delete_c(&ed->buf, 1);
+        buf_insert_c(&ed->buf, c);
+        buf_cursor_l(&ed->buf, 1);
+      }
       chmode(ed, NORMAL);
     } break;
   }
