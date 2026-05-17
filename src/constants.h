@@ -1,15 +1,18 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define LINE_WIDTH 128
-
 #define VERSION "v0.0.0"
 
-#define BLUE "\033[34m"
-#define YELLOW "\033[33m"
-#define RED "\033[31m"
-#define GREY "\033[90m"
-#define BOLD "\033[1m"
-#define RESET "\033[0m"
+#define BLUE 34
+#define YELLOW 33
+#define RED 31
+#define GREY 90
+#define DEFAULT 39
+
+#define STR(x) #x
+#define XSTR(x) STR(x)
+#define ANSI(col) "\033[" XSTR(col) "m"
+
+#define RESET ANSI(0)
 
 #endif // CONSTANTS_H

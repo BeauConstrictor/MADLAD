@@ -19,5 +19,6 @@ build/madlad: build/main.o build/buffer.o
 run: build/madlad
 	$^
 
+.PHONY: dbg
 dbg: build/madlad
 	gdb $^
