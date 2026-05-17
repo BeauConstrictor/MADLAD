@@ -1,7 +1,9 @@
+#include <linux/limits.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #include <stdio.h>
 
 #include "constants.h"
@@ -14,10 +16,16 @@ typedef enum {
 } ed_mode;
 
 typedef struct {
+  void *lib;
+  buf_highlighter fn;
+} highlighter_lib;
+
+typedef struct {
   buf_buffer buf;
   ed_mode mode;
   char status[128];
   unsigned int stat_col;
+  highlighter_lib *highlighter;
 } editor;
 
 struct termios oldt, newt;
@@ -41,6 +49,20 @@ void initialise_terminal() {
   atexit(cleanup_terminal);
 }
 
+void use_highlighter(editor *ed, const char *filetype) {
+  if (ed->highlighter) {
+    dlclose(ed->highlighter->lib);
+    free(ed->highlighter);
+  } else {
+    ed->highlighter = malloc(sizeof(highlighter_lib));
+  }
+
+  char so[PATH_MAX];
+  snprintf(so, sizeof(so), "build/highlighters/%s.so", filetype);
+  ed->highlighter->lib = dlopen(so, RTLD_LAZY);
+  ed->highlighter->fn = dlsym(ed->highlighter->lib, "highlight");
+}
+
 void draw_editor(editor *ed) {
   struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
@@ -53,18 +75,20 @@ void draw_editor(editor *ed) {
 
   buf_printall(&ed->buf, w.ws_row-1,
       ANSI(GREY) "%5d " RESET, ANSI(GREY) "~" RESET,
-      &cur_row, &cur_col);
+      &cur_row, &cur_col, ed->highlighter->fn);
 
-  // ooh boy...
+  // it looks worse than it is, honest!
   // 1. bold
   // 2. use the current status color
   // 3. invert color
   // 4. move cursor to last line
   // 5. write the status (padded with spaces)
-  printf("\033[1m\033[%um\033[7m\033[%d;1H%-*s\033[0m", ed->stat_col, w.ws_row, w.ws_col, ed->status);
+  printf("\033[1m\033[%um\033[7m\033[%d;1H%-*s\033[0m", ed->stat_col,
+      w.ws_row, w.ws_col, ed->status);
 
   // 1. move to cursor position in buffer
   // 2. show the cursor
+  // 7 is the width of the line numbers
   printf("\033[%d;%dH\033[?25h", cur_row, cur_col+7);
 }
 
@@ -95,6 +119,7 @@ void handle_key(editor *ed, char c) {
       switch (c) {
         case 'a':
           buf_cursor_r(&ed->buf, 1);
+          [[fallthrough]];
         case 'i':
           chmode(ed, INSERT);
           break;
@@ -120,6 +145,12 @@ void handle_key(editor *ed, char c) {
         case 'x':
           buf_cursor_r(&ed->buf, 1);
           buf_delete_c(&ed->buf, 1);
+          break;
+        case 'K':
+          buf_scroll_u(&ed->buf, 1);
+          break;
+        case 'J':
+          buf_scroll_d(&ed->buf, 1);
           break;
         case 'q':
           exit(0);
@@ -153,10 +184,10 @@ int main(void) {
   editor ed = {0};
 
   snprintf(ed.status, sizeof(ed.status), "Welcome to MADLAD " VERSION "!");
-
   ed.stat_col = DEFAULT;
+  use_highlighter(&ed, "c");
 
-  FILE *f = fopen("makefile", "r");
+  FILE *f = fopen("src/main.c", "r");
   buf_insert_f(&ed.buf, f);
   fclose(f);
 
