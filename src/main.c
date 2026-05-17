@@ -3,6 +3,7 @@
 #include <termios.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <limits.h>
 #include <dlfcn.h>
 #include <stdio.h>
 
@@ -215,6 +216,7 @@ int main(void) {
   FILE *f = fopen("src/main.c", "r");
   buf_insert_f(&ed.buf, f);
   fclose(f);
+  buf_cursor_u(&ed.buf, UINT_MAX);
 
   initialise_terminal();
 

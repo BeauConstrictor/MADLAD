@@ -361,7 +361,7 @@ void buf_printall(buf_buffer *buf, unsigned int height,
   // went offscreen. a bit of a hacky solution, but we can fix
   // this from inside the printing function.
   if (*cur_row == -1) {
-    buf_cursor_u(buf, 1);
+    buf_scroll_d(buf, 1);
     buf_printall(buf, height, linenums, eoflines, cur_row, cur_col,
         highlighter);
   }
