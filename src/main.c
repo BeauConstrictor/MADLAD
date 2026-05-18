@@ -2,6 +2,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <limits.h>
 #include <dlfcn.h>
@@ -35,7 +36,7 @@ struct winsize w;
 void cleanup_terminal() {
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
-  // enter alternate screen
+  // leave alternate screen
   printf("\033[?1049l");
 }
 
@@ -45,7 +46,7 @@ void initialise_terminal() {
   newt.c_lflag &= ~(ICANON | ECHO);
   tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-  // leave alternate screen
+  // enter alternate screen
   printf("\033[?1049h");
 
   atexit(cleanup_terminal);
@@ -145,6 +146,10 @@ void handle_key(editor *ed, char c) {
           buf_cursor_r(&ed->buf, 1);
           break;
 
+          break;
+        case 'b':
+          break;
+
         case 'u':
           if (!buf_undo(&ed->buf))
             snprintf(ed->status, sizeof(ed->status), "Nothing to undo.");
@@ -156,22 +161,33 @@ void handle_key(editor *ed, char c) {
           break;
 
         case SHIFT_('k'):
-          buf_scroll_u(&ed->buf, 1);
+          buf_scroll_u(&ed->buf, 1, true);
           break;
         case SHIFT_('j'):
-          buf_scroll_d(&ed->buf, 1);
+          buf_scroll_d(&ed->buf, 1, true);
           break;
-        case CTRL_('u'): // <c-u>
-          buf_scroll_u(&ed->buf, w.ws_row/2);
+        case CTRL_('u'):
+          buf_scroll_u(&ed->buf, w.ws_row/2, true);
           break;
-        case CTRL_('d'): // <c-d>
-          buf_scroll_d(&ed->buf, w.ws_row/2);
+        case CTRL_('d'):
+          buf_scroll_d(&ed->buf, w.ws_row/2, true);
           break;
-        case CTRL_('b'): // <c-b>
-          buf_scroll_u(&ed->buf, w.ws_row);
+        case CTRL_('b'):
+          buf_scroll_u(&ed->buf, w.ws_row, true);
           break;
         case CTRL_('f'): // <c-f>
-          buf_scroll_d(&ed->buf, w.ws_row);
+          buf_scroll_d(&ed->buf, w.ws_row, true);
+          break;
+
+        case '{':
+          do {
+            buf_cursor_u(&ed->buf, 1);
+          } while (!buf_line_empty(&ed->buf) && !buf_at_sof(&ed->buf));
+          break;
+        case '}':
+          do {
+            buf_cursor_d(&ed->buf, 1);
+          } while (!buf_line_empty(&ed->buf) && !buf_at_eof(&ed->buf));
           break;
 
         case 'q':
@@ -226,8 +242,4 @@ int main(void) {
     char key = getchar();
     handle_key(&ed, key);
   }
-
-  cleanup_terminal();
-
-  return 0;
 }

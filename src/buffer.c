@@ -119,6 +119,30 @@ void buf_insert_l(buf_buffer *buf) {
   buf->lines++;
 }
 
+bool buf_at_sof(buf_buffer *buf) {
+  return buf->cur_l == buf->first_l;
+}
+
+bool buf_at_sol(buf_buffer *buf) {
+  return buf_cursor_x(buf) == 0;
+}
+
+bool buf_at_eof(buf_buffer *buf) {
+  return buf->cur_l == buf->last_l;
+}
+
+bool buf_at_eol(buf_buffer *buf) {
+  return buf_cursor_x(buf) == buf_line_len(buf);
+}
+
+bool buf_at_last_c(buf_buffer *buf) {
+  return buf_cursor_x(buf) >= buf_line_len(buf) - 1;
+}
+
+bool buf_line_empty(buf_buffer *buf) {
+  return buf_line_text(buf)[0] == '\0';
+}
+
 void buf_cursor_u(buf_buffer *buf, unsigned int n) {
   buf_flush_changes(buf);
   while (n) {
@@ -210,18 +234,20 @@ void buf_cursor_s(buf_buffer *buf) {
   memcpy(e->text+e->aftergap, text, len);
 }
 
-void buf_scroll_u(buf_buffer *buf, unsigned int n) {
+void buf_scroll_u(buf_buffer *buf, unsigned int n, bool move_cur) {
   while (n && buf->scrolled_l->prev) {
-    if (buf->cur_l->prev) buf->cur_l = buf->cur_l->prev;
+    if (buf->cur_l->prev && move_cur) buf->cur_l = buf->cur_l->prev;
     buf->scrolled_l = buf->scrolled_l->prev;
+    buf->scrolled_lno--;
     n--;
   }
 }
 
-void buf_scroll_d(buf_buffer *buf, unsigned int n) {
+void buf_scroll_d(buf_buffer *buf, unsigned int n, bool move_cur) {
   while (n && buf->scrolled_l->next) {
-    if (buf->cur_l->next) buf->cur_l = buf->cur_l->next;
+    if (buf->cur_l->next && move_cur) buf->cur_l = buf->cur_l->next;
     buf->scrolled_l = buf->scrolled_l->next;
+    buf->scrolled_lno++;
     n--;
   }
 }
@@ -296,28 +322,16 @@ bool buf_undo(buf_buffer *buf) {
 void buf_printall(buf_buffer *buf, unsigned int height,
     const char *linenums, const char *eoflines,
     int *cur_row, int *cur_col, buf_highlighter highlighter) {
-  buf_line *l = buf->first_l;
-  unsigned int lineno = 0;
+  buf_line *l = buf->scrolled_l;
+  unsigned int lineno = buf->scrolled_lno;
   unsigned int printed_lines = 0;
-  bool above_scroll = true;
   char highlighted[4096]; // longer than LINE_WIDTH because of the
                           // ansi escapes. maybe this is overkill
-                          // though :D
 
   if (cur_row) *cur_row = -1;
   if (cur_col) *cur_col = -1;
 
   while (l && printed_lines < height) {
-    if (above_scroll) {
-      if (l == buf->scrolled_l) {
-        above_scroll = false;
-      } else {
-        lineno++;
-        l = l->next;
-      }
-      continue;
-    }
-
     char s[LINE_WIDTH];
     if (buf->edits && l == buf->cur_l) {
       buf_stringify_editable(s, sizeof(s), buf->edits);
@@ -361,13 +375,20 @@ void buf_printall(buf_buffer *buf, unsigned int height,
   // went offscreen. a bit of a hacky solution, but we can fix
   // this from inside the printing function.
   if (*cur_row == -1) {
-    buf_scroll_d(buf, 1);
+    unsigned int lines_below = 0;
+    buf_line *l = buf->scrolled_l;
+    while (l && l != buf->cur_l) {
+      l = l->next;
+      lines_below++;
+    }
+    lines_below -= height - 1;
+    buf_scroll_d(buf, lines_below, false);
     buf_printall(buf, height, linenums, eoflines, cur_row, cur_col,
         highlighter);
   }
 }
 
-void free_buf(buf_buffer *buf, bool free_buf_itself) {
+void buf_clear(buf_buffer *buf) {
   buf_line *l = buf->first_l;
   while (l) {
     buf_line *next = l->next;
@@ -378,6 +399,14 @@ void free_buf(buf_buffer *buf, bool free_buf_itself) {
   if (buf->edits)
     free(buf->edits);
 
-  if (free_buf_itself)
-    free(buf);
+  memset(buf, 0x00, sizeof(buf_buffer));
+}
+
+const char *buf_line_text(buf_buffer *buf) {
+  static char text[LINE_WIDTH];
+
+  if (!buf->edits) return buf->cur_l->text;
+
+  buf_stringify_editable(text, sizeof(text), buf->edits);
+  return text;
 }

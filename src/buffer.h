@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #define LINE_WIDTH 128
 
@@ -35,7 +36,8 @@ typedef struct {
   buf_line *cur_l;
   buf_editing *edits;   // the edits of cur_l; NULL if none)
   size_t lines;         // total number of lines in buffer
-  size_t old_cursor;    // cursor position, from when there was an editable
+  size_t old_cursor;    // cursor position, from when there was an editabl
+  size_t scrolled_lno;  // lineno of scrolled_l
 } buf_buffer;
 
 // CREATING A NEW BUFFER:
@@ -56,10 +58,20 @@ void buf_cursor_r(buf_buffer *buf, unsigned int n);
 // move cursor to start of line
 void buf_cursor_s(buf_buffer *buf);
 
+// NOTE:
+// when moving the cursor up, a scroll is also automatically done
+// when the cursor is at the top line of the screen. this library
+// has no notion of a bottom screen line, as it does not track screen
+// height. however, buf_printall does take a screen height, and will
+// automatically scroll down until the cursor is visible again.
+// basically, if you don't use the built-in buf_printall function to
+// draw the buffer, you have to make sure to manually scroll down to
+// keep the cursor in view.
+
 // scroll up n lines
-void buf_scroll_u(buf_buffer *buf, unsigned int n);
+void buf_scroll_u(buf_buffer *buf, unsigned int n, bool move_cur);
 // scroll down n lines
-void buf_scroll_d(buf_buffer *buf, unsigned int n);
+void buf_scroll_d(buf_buffer *buf, unsigned int n, bool move_cur);
 
 // create a new line below the cursor, and move cursor to it
 void buf_insert_l(buf_buffer *buf);
@@ -94,12 +106,30 @@ void buf_printall(buf_buffer *buf, unsigned int height,
     const char *linenums, const char *eoflines,
     int *cur_row, int *cur_col, buf_highlighter highlighter);
 
-// completely clear a buffer and, optionally, free the buffer itself
-void free_buf(buf_buffer *buf, bool free_buf_itself);
+// restore a buffer to being completely empty
+void buf_clear(buf_buffer *buf);
 
 // get the column that the cursor is in
 size_t buf_cursor_x(buf_buffer *buf);
 // get the number of characters in the current line
 size_t buf_line_len(buf_buffer *buf);
+// returns an array containing the text of the current line
+// you don't need to worry about freeing this array
+const char *buf_line_text(buf_buffer *buf);
+char buf_line_char(buf_buffer *buf);
+
+// returns whether or not the cursor is on the first line
+bool buf_at_sof(buf_buffer *buf);
+// returns whether or not the cursor is at the start of the line
+bool buf_at_sol(buf_buffer *buf);
+// returns whether or not the cursor is on the last line
+bool buf_at_eof(buf_buffer *buf);
+// returns whether or not the cursor is after the last char in the line
+bool buf_at_eol(buf_buffer *buf);
+// returns whether or not the cursor is on the last char in the line
+bool buf_at_lastc(buf_buffer *buf);
+// returns whether or not the line length is 0, but slightly faster
+// than doing that directly
+bool buf_line_empty(buf_buffer *buf);
 
 #endif // BUFFER_H
