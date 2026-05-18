@@ -146,13 +146,28 @@ void handle_key(editor *ed, char c) {
           buf_cursor_r(&ed->buf, 1);
           break;
 
-          break;
+        case 'w':
         case 'b':
+          do {
+            if (c == 'w') buf_cursor_r(&ed->buf, 1);
+            if (c == 'b') buf_cursor_l(&ed->buf, 1);
+          } while (strchr(word_CHARS, buf_line_char(&ed->buf))
+              && !buf_at_eol(&ed->buf) && !buf_at_sol(&ed->buf));
+          break;
+
+        case SHIFT_('w'):
+        case SHIFT_('b'):
+          do {
+            if (c == 'W') buf_cursor_r(&ed->buf, 1);
+            if (c == 'B') buf_cursor_l(&ed->buf, 1);
+          } while (!strchr(WORD_DELIM, buf_line_char(&ed->buf))
+              && !buf_at_eol(&ed->buf) && !buf_at_sol(&ed->buf));
           break;
 
         case 'u':
           if (!buf_undo(&ed->buf))
-            snprintf(ed->status, sizeof(ed->status), "Nothing to undo.");
+            snprintf(ed->status, sizeof(ed->status),
+              "Nothing to undo.");
           break;
 
         case 'x':
@@ -180,14 +195,12 @@ void handle_key(editor *ed, char c) {
           break;
 
         case '{':
-          do {
-            buf_cursor_u(&ed->buf, 1);
-          } while (!buf_line_empty(&ed->buf) && !buf_at_sof(&ed->buf));
-          break;
         case '}':
           do {
-            buf_cursor_d(&ed->buf, 1);
-          } while (!buf_line_empty(&ed->buf) && !buf_at_eof(&ed->buf));
+            if (c == '{') buf_cursor_u(&ed->buf, 1);
+            if (c == '}') buf_cursor_d(&ed->buf, 1);
+          } while (!buf_line_empty(&ed->buf)
+              && !buf_at_sof(&ed->buf) && !buf_at_eof(&ed->buf));
           break;
 
         case 'q':

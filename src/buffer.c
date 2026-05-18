@@ -410,3 +410,15 @@ const char *buf_line_text(buf_buffer *buf) {
   buf_stringify_editable(text, sizeof(text), buf->edits);
   return text;
 }
+
+char buf_line_char(buf_buffer *buf) {
+  size_t len = buf_line_len(buf);
+  unsigned int cur = buf_cursor_x(buf);
+
+  if (cur == len) return '\0';
+
+  if (buf->edits)
+    return buf->edits->text[cur];
+  else
+    return buf_line_text(buf)[cur];
+}

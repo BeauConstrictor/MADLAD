@@ -116,6 +116,7 @@ size_t buf_line_len(buf_buffer *buf);
 // returns an array containing the text of the current line
 // you don't need to worry about freeing this array
 const char *buf_line_text(buf_buffer *buf);
+// returns the char under the cursor, or \0 if there isn't one
 char buf_line_char(buf_buffer *buf);
 
 // returns whether or not the cursor is on the first line

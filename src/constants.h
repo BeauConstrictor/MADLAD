@@ -16,6 +16,9 @@
 #define SHIFT_(key) ((key) - 32)
 #define CTRL_(key) (SHIFT_(key) & 0x1f)
 
+#define word_CHARS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+#define WORD_DELIM " \t\n"
+
 #define RESET ANSI(0)
 
 #endif // CONSTANTS_H
