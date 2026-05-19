@@ -102,9 +102,12 @@ void buf_flush_changes(buf_buffer *buf);
 // - eoflines: a format string that takes a single %u; drawn at the
 //             start of every line after the end of the buffer, to
 //             fill to height lines
+// - highlight_col: a specific column to highlight, such as 80
+//                  (-1 for none)
 void buf_printall(buf_buffer *buf, unsigned int height,
     const char *linenums, const char *eoflines,
-    int *cur_row, int *cur_col, buf_highlighter highlighter);
+    int *cur_row, int *cur_col, buf_highlighter highlighter,
+    int highlight_col);
 
 // restore a buffer to being completely empty
 void buf_clear(buf_buffer *buf);

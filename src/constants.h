@@ -2,6 +2,9 @@
 #define CONSTANTS_H
 
 #define VERSION "v0.0.0"
+#define WELCOME ("Welcome to MADLAD " VERSION "!")
+
+#define HIGHLIGHT_COL 80
 
 #define BLUE 34
 #define YELLOW 33

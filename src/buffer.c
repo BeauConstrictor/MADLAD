@@ -321,12 +321,14 @@ bool buf_undo(buf_buffer *buf) {
 // set height to 0 to stop drawing immediately at end of buffer
 void buf_printall(buf_buffer *buf, unsigned int height,
     const char *linenums, const char *eoflines,
-    int *cur_row, int *cur_col, buf_highlighter highlighter) {
+    int *cur_row, int *cur_col, buf_highlighter highlighter,
+    int highlight_col) {
   buf_line *l = buf->scrolled_l;
   unsigned int lineno = buf->scrolled_lno;
   unsigned int printed_lines = 0;
-  char highlighted[4096]; // longer than LINE_WIDTH because of the
-                          // ansi escapes. maybe this is overkill
+
+  char unhighlighted[sizeof(((buf_line *)0)->text)];
+  char highlighted[4096];
 
   if (cur_row) *cur_row = -1;
   if (cur_col) *cur_col = -1;
@@ -352,11 +354,33 @@ void buf_printall(buf_buffer *buf, unsigned int height,
       }
     }
 
-    if (highlighter) {
-      highlighter(highlighted, sizeof(highlighted), s);
-      printf("%s\n", highlighted);
-    } else
-      printf("%s\n", s);
+    if (highlight_col < 0) {
+      if (highlighter) {
+        highlighter(highlighted, sizeof(highlighted), s);
+        printf("%s\n", highlighted);
+      } else {
+        printf("%s\n", s);
+      }
+    } else {
+      if (highlighter) {
+        snprintf(unhighlighted, sizeof(unhighlighted), "%-*.*s",
+            highlight_col, highlight_col, s);
+
+        highlighter(highlighted, sizeof(highlighted), unhighlighted);
+        printf("%s", highlighted);
+      } else {
+        printf("%-*.*s", highlight_col, highlight_col, s);
+      }
+
+      // 1. invert colours
+      // 2. print the char directly on the highlight_col (or space)
+      // 3. print any chars after the highlight, in grey
+      size_t len = strlen(s);
+      printf("\033[90m\033[1m\033[7m%c\033[0m\033[90m%s\033[0m\n",
+         (int)len > highlight_col    ? s[highlight_col]    : ' ',
+         (int)len >  highlight_col+1 ? s + highlight_col+1 : ""
+      );
+    }
 
     l = l->next;
     lineno++;
@@ -384,7 +408,7 @@ void buf_printall(buf_buffer *buf, unsigned int height,
     lines_below -= height - 1;
     buf_scroll_d(buf, lines_below, false);
     buf_printall(buf, height, linenums, eoflines, cur_row, cur_col,
-        highlighter);
+        highlighter, highlight_col);
   }
 }
 
