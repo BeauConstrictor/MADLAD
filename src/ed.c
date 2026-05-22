@@ -216,6 +216,11 @@ void ed_handle_key(ed_editor *ed, char c) {
         return;
       }
 
+      if (c == ESC) {
+        ed_chmode(ed, NORMAL);
+        return;
+      }
+
       size_t len = strlen(ed->status);
 
       if (c == '\b' || c == '\177') {

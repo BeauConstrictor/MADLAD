@@ -29,6 +29,24 @@ char *temp_buf(char *s) {
   return res_buf;
 }
 
+typedef enum {
+  V_UNKNOWN,
+  V_FILETYPE,
+  V_HIGHLIGHTCOL,
+  V_VERSION,
+} cmds_var;
+
+cmds_var read_var_name(const char *name) {
+  if      (0 == strcmp(name, "filetype"))
+    return V_FILETYPE;
+  else if (0 == strcmp(name, "highlightcol"))
+    return V_HIGHLIGHTCOL;
+  else if (0 == strcmp(name, "version"))
+    return V_VERSION;
+  else
+    return V_UNKNOWN;
+}
+
 RPC_FUNC(quit) {
   long code = argc == 1 ? 0 : strtol(args[1], NULL, 10);
   ed->exit = code;
@@ -38,26 +56,33 @@ RPC_FUNC(quit) {
 RPC_FUNC(setv) {
   ENSURE_ENOUGH_ARGS(3);
 
-  char *var = args[1];
+  cmds_var var = read_var_name(args[1]);
   char *val = args[2];
 
   // buf_buffer *buf = &ed->buf;
 
-  if        (0 == strcmp(var, "filetype")) {
-    if (!ed_use_highlighter(ed, val))
-      RESPOND("unsupported filetype", 1);
-  } else if (0 == strcmp(var, "highlightcol")) {
-    char *end;
-    long highlightcol = strtol(val, &end, 10);
+  switch (var) {
+    case V_UNKNOWN: {
+      RESPOND("undefined variable", 1);
+    } break;
 
-    if (end == val)
-      RESPOND("invalid number", 1);
+    case V_FILETYPE: {
+      if (!ed_use_highlighter(ed, val))
+        RESPOND("unsupported filetype", 1);
+    } break;
 
-    ed->settings.highlight_col = (int)highlightcol;
-  }
+    case V_HIGHLIGHTCOL: {
+      char *end;
+      long highlightcol = strtol(val, &end, 10);
 
-  else {
-    RESPOND("undefined setting", 1);
+      if (end == val)
+        RESPOND("invalid number", 1);
+
+      ed->settings.highlight_col = (int)highlightcol;
+    } break;
+
+    default:
+      RESPOND("variable is not settable", 1);
   }
 
   SUCCESS();
@@ -66,22 +91,28 @@ RPC_FUNC(setv) {
 RPC_FUNC(getv) {
   ENSURE_ENOUGH_ARGS(2);
 
-  char *var = args[1];
+  cmds_var var = read_var_name(args[1]);
 
   // buf_buffer *buf = &ed->buf;
+  
+  switch (var) {
+    case V_UNKNOWN:
+      RESPOND("undefined variable", 1);
 
-  if        (0 == strcmp(var, "filetype")) {
-    RESPOND(ed->settings.highlighter->name, 0);
-  } else if (0 == strcmp(var, "highlightcol")) {
-    char res[32];
-    snprintf(res, sizeof(res), "%d", ed->settings.highlight_col);
-    RESPOND(temp_buf(res), 0);
-  } else if (0 == strcmp(var, "version")) {
-    RESPOND(VERSION, 0);
-  }
+    case V_FILETYPE:
+      RESPOND(ed->settings.highlighter->name, 0);
 
-  else {
-    RESPOND("undefined setting", 1);
+    case V_HIGHLIGHTCOL: {
+      char res[32];
+      snprintf(res, sizeof(res), "%d", ed->settings.highlight_col);
+      RESPOND(temp_buf(res), 0);
+    };
+
+    case V_VERSION:
+      RESPOND(VERSION, 0);
+
+    default:
+      RESPOND("variable is not gettable", 1);
   }
 }
 

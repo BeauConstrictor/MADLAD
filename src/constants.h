@@ -18,6 +18,7 @@
 
 #define SHIFT_(key) ((key) - 32)
 #define CTRL_(key) (SHIFT_(key) & 0x1f)
+#define ESC '\033'
 
 #define word_CHARS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 #define WORD_DELIM " \t\n"
