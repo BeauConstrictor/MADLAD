@@ -41,6 +41,7 @@ build/dsh:
 	mkdir -p build/dsh
 	cp lib/csrpc/build/send-cmd build/dsh/sc
 	cp -r src/dsh/* build/dsh/
+	chmod +x build/dsh/*
 
 .PHONY: run
 run: all

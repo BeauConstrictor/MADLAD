@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #define C_RESET   "\033[0m"
-#define C_KEY     "\033[33m"
-#define C_TYPE    "\033[36m"
+#define C_KEY     "\033[38;5;208m"
+#define C_TYPE    "\033[38;5;11m"
 #define C_STR     "\033[32m"
 #define C_COMMENT "\033[90m"
 #define C_NUM     "\033[35m"
@@ -58,7 +58,6 @@ void highlight(char *s, size_t size, const char *l) {
   if (size == 0 || !s || !l) return;
 
   while (l[j] && i + 1 < size) {
-      /* ---- preprocessor lines (#...) ---- */
       if (j == 0 && l[j] == '#') {
         out(s, size, &i, C_PREPROC);
 
@@ -70,7 +69,6 @@ void highlight(char *s, size_t size, const char *l) {
         break;
       }
 
-      /* ---- comments (//) ---- */
       if (l[j] == '/' && l[j+1] == '/') {
         out(s, size, &i, C_COMMENT);
 
@@ -82,7 +80,6 @@ void highlight(char *s, size_t size, const char *l) {
       break;
     }
 
-    /* ---- strings ---- */
     if (l[j] == '"') {
       out(s, size, &i, C_STR);
       outc(s, size, &i, l[j++]);
@@ -105,7 +102,6 @@ void highlight(char *s, size_t size, const char *l) {
       continue;
     }
 
-    /* ---- char literal ---- */
     if (l[j] == '\'') {
       out(s, size, &i, C_STR);
       outc(s, size, &i, l[j++]);
@@ -124,7 +120,6 @@ void highlight(char *s, size_t size, const char *l) {
       continue;
     }
 
-    /* ---- numbers ---- */
     if (isdigit((unsigned char)l[j])) {
       out(s, size, &i, C_NUM);
 
@@ -135,7 +130,6 @@ void highlight(char *s, size_t size, const char *l) {
       continue;
     }
 
-    /* ---- identifiers ---- */
     if (isalpha((unsigned char)l[j]) || l[j] == '_') {
       char buf[128];
       size_t k = 0;
@@ -160,11 +154,9 @@ void highlight(char *s, size_t size, const char *l) {
       continue;
     }
 
-    /* ---- default ---- */
     outc(s, size, &i, l[j++]);
   }
 
-  /* always reset at end */
   out(s, size, &i, C_RESET);
   s[i] = '\0';
 }

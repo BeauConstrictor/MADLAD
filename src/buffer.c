@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -234,6 +235,10 @@ void buf_cursor_s(buf_buffer *buf) {
   memcpy(e->text+e->aftergap, text, len);
 }
 
+void buf_cursor_e(buf_buffer *buf) {
+  buf_cursor_r(buf, buf_line_len(buf));
+}
+
 void buf_scroll_u(buf_buffer *buf, unsigned int n, bool move_cur) {
   while (n && buf->scrolled_l->prev) {
     if (buf->cur_l->prev && move_cur) buf->cur_l = buf->cur_l->prev;
@@ -302,8 +307,45 @@ void buf_insert_f(buf_buffer *buf, FILE *f) {
 void buf_delete_c(buf_buffer *buf, unsigned int n) {
   buf_begin_editing(buf);
 
-  while (n && buf->edits->cursor > 0) {
-    buf->edits->cursor--;
+  while (n) {
+    if (buf->edits->cursor == 0) {
+      buf_delete_l(buf, 1);
+      buf_cursor_e(buf);
+    } else {
+      buf->edits->cursor--;
+    }
+    n--;
+  }
+}
+
+void buf_delete_l(buf_buffer *buf, unsigned int n) {
+  buf_flush_changes(buf);
+
+  while (n) {
+    if (buf->lines == 1) {
+      buf_replace_l(buf, "");
+      break;
+    }
+
+    buf_line *l = buf->cur_l;
+    buf->cur_l = l->next ? l->next : l->prev;
+
+    if (buf->scrolled_l == l)
+      buf->scrolled_l = l->next ? l->next: l->prev;
+
+    if (!buf->cur_l) {
+      buf->first_l = NULL;
+      buf->last_l  = NULL;
+    } else {
+      if (buf->first_l == l) buf->first_l = l->next;
+      if (buf->last_l  == l) buf->last_l = l->prev;
+    }
+    
+    if (l->next) l->next->prev = l->prev;
+    if (l->prev) l->prev->next = l->next;
+    free(l);
+
+    buf->lines--;
     n--;
   }
 }
@@ -445,4 +487,17 @@ char buf_line_char(buf_buffer *buf) {
     return buf->edits->text[cur];
   else
     return buf_line_text(buf)[cur];
+}
+
+void buf_fwrite(buf_buffer *buf, FILE *f) {
+  buf_line *l = buf->first_l;
+
+  if (!l) return;
+
+  buf_flush_changes(buf);
+
+  while (l) {
+    fwrite(l->text, 1, l->len, f);
+    l = l->next;
+  }
 }

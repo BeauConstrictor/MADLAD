@@ -1,0 +1,12 @@
+#!/bin/sh
+eval $IMPORT_MADLAD
+
+path="$(getv buf:path)"
+
+if [ -n "$path" ]; then
+    printf "\"%s\", " "$path"
+else
+    printf "unnamed buffer, "
+fi
+getv buf:lines
+printf "L"

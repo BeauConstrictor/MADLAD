@@ -4,5 +4,6 @@
 #include "ed.h"
 
 void cmd_run(ed_editor *ed, char *cmd);
+void cmd_init();
 
 #endif // CMDS_H

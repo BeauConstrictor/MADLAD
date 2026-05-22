@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <dlfcn.h>
 #include <stdio.h>
 
@@ -83,7 +84,7 @@ void ed_chmode(ed_editor *ed, ed_mode mode) {
   switch (mode) {
     case NORMAL:
       ed->stat_col = DEFAULT;
-      ed->status[0] = '\0';
+      cmd_run(ed, BUF_STATUS_CMD);
       printf("\033[2 q");
       break;
     case INSERT:
@@ -161,6 +162,23 @@ void ed_handle_key(ed_editor *ed, char c) {
         case 'x':
           buf_cursor_r(&ed->buf, 1);
           buf_delete_c(&ed->buf, 1);
+          break;
+        case 'd':
+          buf_delete_l(&ed->buf, 1);
+          break;
+
+        case '$':
+          buf_cursor_e(&ed->buf);
+          break;
+        case '0':
+          buf_cursor_s(&ed->buf);
+          break;
+        case '^':
+          buf_cursor_s(&ed->buf);
+          while (isspace(buf_line_char(&ed->buf)) &&
+              buf_cursor_x(&ed->buf) < buf_line_len(&ed->buf)) {
+            buf_cursor_r(&ed->buf, 1);
+          }
           break;
 
         case SHIFT_('k'):

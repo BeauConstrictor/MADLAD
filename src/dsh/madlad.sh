@@ -20,9 +20,21 @@ export PATH="./build/dsh/:$PATH"
 quit()            { sc quit $@; }
 setv()            { sc setv $@; }
 getv()            { sc getv $@; }
+insert()          { sc insert $@; }
+finsert()         { sc finsert $@; }
+fwrite()          { sc fwrite "$@"; setv buf:path "$@"; }
+eraseall()        { sc eraseall $@; }
+cursor_u()        { sc cursor_u $@; }
+cursor_d()        { sc cursor_d $@; }
+cursor_l()        { sc cursor_l $@; }
+cursor_r()        { sc cursor_r $@; }
 
 # aliases
 q()               { quit; }
+e()               { edit $@; }
+w()               { fwrite $@; }
+g()               { getv $@; }
+s()               { setv $@; }
 
 # char escapes
 lf='

@@ -38,6 +38,7 @@ typedef struct {
   size_t lines;         // total number of lines in buffer
   size_t old_cursor;    // cursor position, from when there was an editabl
   size_t scrolled_lno;  // lineno of scrolled_l
+  char path[4096];
 } buf_buffer;
 
 // CREATING A NEW BUFFER:
@@ -57,6 +58,8 @@ void buf_cursor_l(buf_buffer *buf, unsigned int n);
 void buf_cursor_r(buf_buffer *buf, unsigned int n);
 // move cursor to start of line
 void buf_cursor_s(buf_buffer *buf);
+// move cursor to end of line
+void buf_cursor_e(buf_buffer *buf);
 
 // NOTE:
 // when moving the cursor up, a scroll is also automatically done
@@ -84,9 +87,14 @@ void buf_insert_f(buf_buffer *buf, FILE *f);
 
 // delete n characters from before the cursor
 void buf_delete_c(buf_buffer *buf, unsigned int n);
+// delete n line from before the cursor
+void buf_delete_l(buf_buffer *buf, unsigned int n);
 
 // replace the contents of the current line with s; cannot undo
 void buf_replace_l(buf_buffer *buf, const char *s);
+
+// write the contents of the buffer to f
+void buf_fwrite(buf_buffer *buf, FILE *f);
 
 // this undo function is *incredibly* limited. it remove all previous
 // insertions made after the most receent line change or call to

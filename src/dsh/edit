@@ -1,0 +1,9 @@
+#!/bin/sh
+eval $IMPORT_MADLAD
+
+eraseall
+if [ -f "$@" ]; then
+    finsert "$@"
+    cursor_u $(getv buf:lines)
+fi
+setv buf:path "$@"
