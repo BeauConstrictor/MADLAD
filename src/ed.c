@@ -31,7 +31,7 @@ bool ed_use_highlighter(ed_editor *ed, const char *filetype) {
     ed->settings.highlighter->fn = NULL;
   } else {
     char so[PATH_MAX];
-    snprintf(so, sizeof(so), "build/highlighters/%s.so", filetype);
+    snprintf(so, sizeof(so), "%s/highlighters/%s.so", getenv("MADLAD_INSTALL"), filetype);
     ed->settings.highlighter->lib = dlopen(so, RTLD_LAZY);
     if (ed->settings.highlighter->lib) {
       ed->settings.highlighter->fn = dlsym(ed->settings.highlighter->lib, "highlight");

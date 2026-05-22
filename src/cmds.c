@@ -22,6 +22,8 @@
 
 char *res_buf = NULL;
 
+char *install_dir;
+
 char *temp_buf(char *s) {
   if (res_buf)
     free(res_buf);
@@ -295,7 +297,9 @@ static struct csrpc_resp handle_rpc_call(struct csrpc_call *call, void *ed) {
 void cmd_run(ed_editor *ed, char *cmd) {
   ed->status[0] = '\0';
 
-  char madlad_sh[] = "build/dsh/madlad.sh";
+  char madlad_sh[4096];
+  snprintf(madlad_sh, sizeof(madlad_sh), "%s/dsh/madlad.sh",
+      install_dir);
 
   FILE *f = csrpc_run(cmd, madlad_sh, handle_rpc_call, ed);
 
@@ -316,5 +320,15 @@ void cmd_run(ed_editor *ed, char *cmd) {
 }
 
 void cmd_init() {
+  install_dir = getenv("MADLAD_INSTALL");
+
+  if (!install_dir) {
+    fprintf(stderr, "madlad: MADLAD_INSTALL is not set\n"
+      "Make sure to add this to your system's '~/.bashrc' equivalent:\n"
+      "\texport MADLAD_INSTALL=~/.local/share/madlad/\n");
+    exit(1);
+  }
+
+
   setenv("IMPORT_MADLAD", ". \"$(command -v madlad.sh)\"", 1);
 }

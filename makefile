@@ -44,6 +44,7 @@ build/dsh:
 	chmod +x build/dsh/*
 
 .PHONY: run
+run: export MADLAD_INSTALL=./build
 run: all
 	build/madlad
 
@@ -54,3 +55,10 @@ dbg: build/madlad
 .PHONY: clean
 clean: | build/
 	rm -rf build/
+
+.PHONY: install
+install:
+	mkdir -p $(HOME)/.local/share
+	mkdir -p $(HOME)/.local/bin
+	cp -r build/ $(HOME)/.local/share/madlad/
+	cp build/madlad $(HOME)/.local/bin/madlad

@@ -14,7 +14,7 @@ else
     MADLAD_IMPORTED="yes"
 fi
 
-export PATH="./build/dsh/:$PATH"
+export PATH="$MADLAD_INSTALL/dsh/:$PATH"
 
 # base commands
 quit()            { sc quit $@; }
