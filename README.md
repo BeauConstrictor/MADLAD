@@ -19,8 +19,8 @@ within the editor straight in your `~/.madladrc`. Shell scripts
 
 In addition, syntax highlighting is implemented in `*.so` files. These
 highlighters are *incredibly* basic, and highlight individual lines
-with no actual parsing of syntax. Currently, only makefiles and C
-files have support.
+with no actual parsing of syntax. Currently, only a few languages
+have support.
 
 The biggest limitation with editing in MADLAD is that you cannot
 combine motions with operations to form complex actions like in `vim`.
