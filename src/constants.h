@@ -2,7 +2,7 @@
 #define CONSTANTS_H
 
 #define VERSION "v0.0.0"
-#define WELCOME ("Welcome to MADLAD " VERSION "!")
+#define WELCOME "Welcome to MADLAD " VERSION "!"
 
 #define HIGHLIGHT_COL 80
 

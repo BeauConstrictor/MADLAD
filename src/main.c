@@ -4,6 +4,7 @@
 #include <limits.h>
 
 #include "constants.h"
+#include "cmds.h"
 #include "ed.h"
 
 struct termios oldt, newt;
@@ -34,6 +35,12 @@ int main(void) {
   ed_chmode(&ed, NORMAL);
   ed_default_settings(&ed);
   snprintf(ed.status, sizeof(ed.status), WELCOME);
+
+  cmd_run(&ed, "if [ -f ~/.madladrc ]; then"
+               "    . ~/.madladrc;"
+               "else"
+               "   echo \"" WELCOME "\";"
+               "fi");
 
   FILE *f = fopen("src/main.c", "r");
   buf_insert_f(&ed.buf, f);

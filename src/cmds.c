@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "constants.h"
 #include "csrpc.h"
 #include "ed.h"
 
@@ -75,6 +76,8 @@ RPC_FUNC(getv) {
     char res[32];
     snprintf(res, sizeof(res), "%d", ed->settings.highlight_col);
     RESPOND(temp_buf(res), 0);
+  } else if (0 == strcmp(var, "version")) {
+    RESPOND(VERSION, 0);
   }
 
   else {
