@@ -58,6 +58,7 @@ e()               { edit $@; }
 w()               { fwrite $@; }
 g()               { getv $@; }
 s()               { setv $@; }
+wq()              { w $@; q; }
 
 # CHARS
 lf='
@@ -73,3 +74,4 @@ MAGENTA="35"
 CYAN="36"
 WHITE="37"
 DEFAULT="39"
+

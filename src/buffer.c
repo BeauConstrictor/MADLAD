@@ -498,6 +498,7 @@ void buf_fwrite(buf_buffer *buf, FILE *f) {
 
   while (l) {
     fwrite(l->text, 1, l->len, f);
+    fputc('\n', f);
     l = l->next;
   }
 }

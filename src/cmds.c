@@ -166,8 +166,6 @@ RPC_FUNC(finsert) {
 }
 
 RPC_FUNC(fwrite) {
-  ENSURE_ENOUGH_ARGS(1);
-
   FILE *f;
   if (argc == 1) {
     char *path = ed->buf.path;
