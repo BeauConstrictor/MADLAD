@@ -4,6 +4,8 @@ MADLAD is a line-oriented, fullscreen modal text editor inspired by
 `vi`, but with an aggresively minimal core that outsources scripting
 to the POSIX `sh`.
 
+![Screenshot of a C hello world program, open in MADLAD](screenshot.png)
+
 MADLAD implements the most basic full-screen modal text editor
 possible, focusing on outsourcing as many elements as possible to
 external programs.
