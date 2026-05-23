@@ -181,6 +181,13 @@ void ed_handle_key(ed_editor *ed, char c) {
           }
           break;
 
+        case 'g':
+          buf_scroll_u(&ed->buf, UINT_MAX, true);
+          break;
+        case 'G':
+          buf_scroll_d(&ed->buf, UINT_MAX, true);
+          break;
+
         case SHIFT_('k'):
           buf_scroll_u(&ed->buf, 1, true);
           break;

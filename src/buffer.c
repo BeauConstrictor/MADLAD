@@ -299,9 +299,10 @@ void buf_insert_s(buf_buffer *buf, const char *s) {
 }
 
 void buf_insert_f(buf_buffer *buf, FILE *f) {
-  int c;
-  while ((c = fgetc(f)) != EOF)
-    buf_insert_c(buf, (char)c);
+  char line[LINE_WIDTH];
+
+  while (fgets(line, sizeof(line), f) != NULL)
+    buf_insert_s(buf, line);
 }
 
 void buf_delete_c(buf_buffer *buf, unsigned int n) {
@@ -498,7 +499,7 @@ void buf_fwrite(buf_buffer *buf, FILE *f) {
 
   while (l) {
     fwrite(l->text, 1, l->len, f);
-    fputc('\n', f);
+    if (l != buf->last_l) fputc('\n', f);
     l = l->next;
   }
 }
