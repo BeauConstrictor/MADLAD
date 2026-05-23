@@ -1,11 +1,12 @@
 CC := clang
 CCOPT := -Wall -Wextra -Werror -g -fPIC
 
-HIGHLIGHERS_C   := $(wildcard src/highlighters/*.c)
+HIGHLIGHERS_C := $(wildcard src/highlighters/*.c)
 HIGHLIGHTERS_SO := $(patsubst src/highlighters/%.c,build/highlighters/%.so,$(HIGHLIGHERS_C))
 
 all: build/madlad build/highlighters build/dsh
 
+.PHONY: build/
 build/:
 	mkdir -p build
 	mkdir -p build/highlighters
@@ -29,6 +30,7 @@ build/madlad: build/main.o build/buffer.o build/ed.o build/cmds.o
 build/highlighters/%.so: src/highlighters/%.c | build/
 	$(CC) $(CCOPT) -shared -o $@ $<
 
+.PHONY: build/highlighters
 build/highlighters: $(HIGHLIGHTERS_SO)
 
 .PHONY: lib/csrpc
