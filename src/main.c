@@ -37,14 +37,18 @@ void run_config_script(ed_editor *ed) {
                "fi");
 }
 
-void mainloop(ed_editor *ed) {
+int mainloop(ed_editor *ed) {
   while (1) {
     ed_draw(ed);
 
     char key = getchar();
     ed_handle_key(ed, key);
-    if (ed->exit != -1) exit(ed->exit);
+    if (ed->exit != -1) break;
   }
+
+  buf_clear(&ed->buf);
+
+  return ed->exit;
 }
 
 void repl(ed_editor *ed) {
@@ -55,6 +59,8 @@ void repl(ed_editor *ed) {
     cmd_run(ed, cmd);
     printf("%s\n", ed->status);
   }
+
+  exit(0);
 }
 
 void process_args(ed_editor *ed, int argc, char **argv) {
@@ -87,6 +93,7 @@ int main(int argc, char **argv) {
   snprintf(ed.status, sizeof(ed.status), WELCOME);
 
   cmd_init();
+  atexit(cmd_finished);
   cmd_run(&ed, "eraseall");
 
   process_args(&ed, argc, argv);
@@ -94,5 +101,5 @@ int main(int argc, char **argv) {
 
   initialise_terminal();
 
-  mainloop(&ed);
+  return mainloop(&ed);
 }

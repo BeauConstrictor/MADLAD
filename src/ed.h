@@ -17,7 +17,7 @@ typedef struct {
 } ed_highlighter;
 
 typedef struct {
-    ed_highlighter *highlighter;
+    ed_highlighter highlighter;
     int highlight_col;
 } ed_settings;
 

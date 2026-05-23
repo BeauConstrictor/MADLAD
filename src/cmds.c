@@ -122,7 +122,7 @@ RPC_FUNC(getv) {
       RESPOND("undefined variable", 1);
 
     case V_FILETYPE:
-      RESPOND(ed->settings.highlighter->name, 0);
+      RESPOND(ed->settings.highlighter.name, 0);
 
     case V_HIGHLIGHTCOL: {
       char res[32];
@@ -329,4 +329,8 @@ void cmd_init() {
 
 
   setenv("IMPORT_MADLAD", ". \"$(command -v madlad.sh)\"", 1);
+}
+
+void cmd_finished() {
+  free(res_buf);
 }

@@ -17,26 +17,24 @@
 struct winsize w;
 
 bool ed_use_highlighter(ed_editor *ed, const char *filetype) {
-  if (ed->settings.highlighter && ed->settings.highlighter->lib) {
-    dlclose(ed->settings.highlighter->lib);
-  } else if (!ed->settings.highlighter) {
-    ed->settings.highlighter = malloc(sizeof(ed_highlighter));
+  if (ed->settings.highlighter.lib) {
+    dlclose(ed->settings.highlighter.lib);
   }
 
-  snprintf(ed->settings.highlighter->name, sizeof(ed->settings.highlighter->name), "%s",
+  snprintf(ed->settings.highlighter.name, sizeof(ed->settings.highlighter.name), "%s",
       filetype);
 
   if (strcmp(filetype, "plain") == 0) {
-    ed->settings.highlighter->lib = NULL;
-    ed->settings.highlighter->fn = NULL;
+    ed->settings.highlighter.lib = NULL;
+    ed->settings.highlighter.fn = NULL;
   } else {
     char so[PATH_MAX];
     snprintf(so, sizeof(so), "%s/highlighters/%s.so", getenv("MADLAD_INSTALL"), filetype);
-    ed->settings.highlighter->lib = dlopen(so, RTLD_LAZY);
-    if (ed->settings.highlighter->lib) {
-      ed->settings.highlighter->fn = dlsym(ed->settings.highlighter->lib, "highlight");
+    ed->settings.highlighter.lib = dlopen(so, RTLD_LAZY);
+    if (ed->settings.highlighter.lib) {
+      ed->settings.highlighter.fn = dlsym(ed->settings.highlighter.lib, "highlight");
     } else {
-      ed->settings.highlighter->fn = NULL;
+      ed->settings.highlighter.fn = NULL;
       return false;
     }
   }
@@ -55,7 +53,7 @@ void ed_draw(ed_editor *ed) {
 
   buf_printall(&ed->buf, w.ws_row-1,
       ANSI(GREY) "%5d " RESET, ANSI(GREY) "~" RESET,
-      &cur_row, &cur_col, ed->settings.highlighter->fn,
+      &cur_row, &cur_col, ed->settings.highlighter.fn,
       ed->settings.highlight_col);
 
   printf("\033[K");
