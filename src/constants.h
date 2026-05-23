@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define VERSION "v0.2.3"
+#define VERSION "v0.2.4"
 #define WELCOME "Welcome to MADLAD " VERSION "!"
 
 #define HELP_MSG \
