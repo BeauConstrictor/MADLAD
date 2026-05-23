@@ -57,7 +57,7 @@ void repl(ed_editor *ed) {
   }
 }
 
-void process_args(ed_editor *ed, int argc, char *argv[]) {
+void process_args(ed_editor *ed, int argc, char **argv) {
   if (argc > 2) {
     fprintf(stderr, "madlad: too many arguments\n");
     fprintf(stderr, "Try 'madlad --help' for more information.\n");
