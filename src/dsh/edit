@@ -1,9 +1,23 @@
 #!/bin/sh
 eval $IMPORT_MADLAD
 
+path="$@"
+name="${path##*/}"
+
 eraseall
 if [ -f "$@" ]; then
     finsert "$@"
     cursor_u $(getv buf:lines)
 fi
 setv buf:path "$@"
+
+case "$name" in
+    *.*) filetype=${name##*.} ;;
+    *)   filetype=$name ;;
+esac
+
+status
+
+if ! setv filetype "$filetype" > /dev/null; then
+    printf " (unsupported filetype)"
+fi

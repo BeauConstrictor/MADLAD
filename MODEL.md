@@ -1,8 +1,7 @@
 # MADLAD's Text Editing Model
 
 At it's core, MADLAD does not use a rope, piece table or gap buffer
-to represent it's text, but a bespoke system inspired by classic
-`vi`.
+to represent it's text, but a bespoke system inspired by classic `vi`.
 
 This structure, referred to as a `buffer` in the code, is a
 doubly-linked list of text lines. A reference is kept to the first
