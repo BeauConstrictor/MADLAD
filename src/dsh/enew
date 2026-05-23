@@ -1,0 +1,8 @@
+#!/bin/sh
+eval $IMPORT_MADLAD
+
+eraseall
+setv buf:path '' > /dev/null
+setv filetype plain
+
+status
