@@ -5,11 +5,11 @@ path="$@"
 name="${path##*/}"
 
 eraseall
-if [ -f "$@" ]; then
-    finsert "$@"
+if [ -f "$path" ]; then
+    finsert "$path"
     cursor_u $(getv buf:lines)
 fi
-setv buf:path "$@"
+setv buf:path "$path"
 
 case "$name" in
     *.*) filetype=${name##*.} ;;
