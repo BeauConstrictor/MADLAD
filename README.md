@@ -27,9 +27,7 @@ have support.
 The biggest limitation with editing in MADLAD is that you cannot
 combine motions with operations to form complex actions like in `vim`.
 All you can do is move the cursor around and delete individual
-characters (there are no registers). This inhibits MADLAD's usefuless
-as a primary text editor and leaves it a little more than a proof of
-concept of this shell script concept.
+characters (there are no registers).
 
 ## Building
 
