@@ -15,7 +15,7 @@ interact with the editor through
 Neovim, which doesn't fully commit to the RPC idea, MADLAD uses this
 same system in both the `:` commands and config scripts - you can
 put commands like `setv highlightcol 80` that you would run from
-within the editor straight in your `~/.madladrc`. Shell scripts
+within the editor straight in your `~/.madladrc`.
 
 In addition, syntax highlighting is implemented in `*.so` files. These
 highlighters are *incredibly* basic, and highlight individual lines
